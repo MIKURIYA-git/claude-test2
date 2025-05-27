@@ -1,13 +1,11 @@
 name: Claude Code Action
 on:
-  issues:
-    types: [opened]
   issue_comment:
     types: [created]
 
 jobs:
   claude-code:
-    if: contains(github.event.comment.body, '@claude') || contains(github.event.issue.body, '@claude')
+    if: contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,10 +14,10 @@ jobs:
       actions: read
       checks: write
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Run Claude Code Action
+      - name: Claude Code
         uses: anthropics/claude-code-action@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
