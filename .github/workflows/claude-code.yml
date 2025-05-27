@@ -1,130 +1,28 @@
-name: Claude Code Action (3.5 Sonnet)
+name: Claude Code Action
 on:
-  issue_comment:
-    types: [created]
   issues:
-    types: [opened]
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+  pull_request:
+    types: [opened, edited, synchronize]
+  pull_request_review_comment:
+    types: [created, edited]
 
 jobs:
   claude-code:
-    if: contains(github.event.comment.body, '@claude') || contains(github.event.issue.body, '@claude')
     runs-on: ubuntu-latest
     permissions:
       issues: write
       contents: write
       pull-requests: write
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@main
         with:
-          node-version: '18'
-          
-      - name: Call Claude 3.5 Sonnet
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cat > claude_request.js << 'EOF'
-          const https = require('https');
-          const fs = require('fs');
-          
-          const apiKey = process.env.ANTHROPIC_API_KEY;
-          const githubToken = process.env.GITHUB_TOKEN;
-          
-          // Get issue/comment content
-          const eventName = process.env.GITHUB_EVENT_NAME;
-          const eventPath = process.env.GITHUB_EVENT_PATH;
-          const event = JSON.parse(fs.readFileSync(eventPath, 'utf8'));
-          
-          let userPrompt = '';
-          let issueNumber = '';
-          
-          if (eventName === 'issue_comment') {
-            userPrompt = event.comment.body;
-            issueNumber = event.issue.number;
-          } else if (eventName === 'issues') {
-            userPrompt = event.issue.body;
-            issueNumber = event.issue.number;
-          }
-          
-          // Call Claude 3.5 Sonnet API
-          const data = JSON.stringify({
-            model: "claude-3-5-sonnet-20241022",
-            max_tokens: 4000,
-            messages: [{
-              role: "user",
-              content: `You are a helpful coding assistant. Please help with this request: ${userPrompt}`
-            }]
-          });
-          
-          const options = {
-            hostname: 'api.anthropic.com',
-            port: 443,
-            path: '/v1/messages',
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': apiKey,
-              'anthropic-version': '2023-06-01',
-              'Content-Length': data.length
-            }
-          };
-          
-          const req = https.request(options, (res) => {
-            let responseData = '';
-            res.on('data', (chunk) => {
-              responseData += chunk;
-            });
-            
-            res.on('end', () => {
-              try {
-                const response = JSON.parse(responseData);
-                const claudeResponse = response.content[0].text;
-                
-                // Post comment to GitHub issue
-                const commentData = JSON.stringify({
-                  body: `🤖 **Claude 3.5 Sonnet Response:**\n\n${claudeResponse}`
-                });
-                
-                const commentOptions = {
-                  hostname: 'api.github.com',
-                  port: 443,
-                  path: `/repos/${process.env.GITHUB_REPOSITORY}/issues/${issueNumber}/comments`,
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `token ${githubToken}`,
-                    'User-Agent': 'Claude-3.5-Sonnet-Bot',
-                    'Content-Length': commentData.length
-                  }
-                };
-                
-                const commentReq = https.request(commentOptions, (commentRes) => {
-                  console.log(`Comment posted with status: ${commentRes.statusCode}`);
-                });
-                
-                commentReq.on('error', (e) => {
-                  console.error(`Error posting comment: ${e}`);
-                });
-                
-                commentReq.write(commentData);
-                commentReq.end();
-                
-              } catch (error) {
-                console.error('Error parsing Claude response:', error);
-              }
-            });
-          });
-          
-          req.on('error', (e) => {
-            console.error(`Error calling Claude API: ${e}`);
-          });
-          
-          req.write(data);
-          req.end();
-          EOF
-          
-          node claude_request.js
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
