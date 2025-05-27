@@ -359,6 +359,37 @@ body::before {
     font-size: 0.8rem;
 }
 
+.upgrade-tier {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 255, 255, 0.3);
+    color: #00ffff;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.research-tier {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 255, 0.3);
+    color: #ff00ff;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.achievement-progress {
+    font-size: 0.75rem;
+    color: #888;
+    margin-top: 5px;
+    text-align: center;
+}
+
 /* Research panel */
 .research-panel {
     grid-area: research;
