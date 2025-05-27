@@ -13,7 +13,11 @@ jobs:
   claude-code:
     runs-on: ubuntu-latest
     steps:
-      - uses: anthropics/claude-code-action@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Run Claude Code Action
+        uses: anthropics/claude-code-action@main
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
